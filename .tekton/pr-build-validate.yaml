@@ -119,6 +119,17 @@ spec:
           name: aib-workspace-create
         runAfter:
           - clone-repo
+        env:
+          - name: CAIB_SERVER
+            valueFrom:
+              configMapKeyRef:
+                name: builder-devspaces-config
+                key: CAIB_SERVER
+          - name: BUILDER_NAMESPACE
+            valueFrom:
+              configMapKeyRef:
+                name: builder-devspaces-config
+                key: BUILDER_NAMESPACE
         params:
           - name: client-name
             value: $(tasks.setup-jmp.results.jmp-client-name)
