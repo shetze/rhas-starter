@@ -38,9 +38,20 @@ oc adm policy add-cluster-role-to-user jumpstarter-access-role "system:serviceac
 oc adm policy add-role-to-group view platform-users -n $NAMESPACE
 oc adm policy add-role-to-group edit platform-users -n $NAMESPACE
 
-# image pull rights for the exporter
+# create the auto-exporters namespace if it doesn't exist
+if ! oc get namespace auto-exporters &>/dev/null; then
+  echo "Creating auto-exporters namespace..."
+  oc create namespace auto-exporters
+fi
+
+# apply ALL exporter configurations seamlessly
+echo "Applying qemu-exporter configurations to auto-exporters namespace..."
+oc apply -f exporters/qemu-exporter/ -n auto-exporters
+
+# image pull rights for the exporter in the new namespace
+echo "Granting image pull rights to the qemu-exporter..."
 oc policy add-role-to-user system:image-puller \
-	system:serviceaccount:auto-jumpstarter:qemu-exporter \
+	system:serviceaccount:auto-exporters:qemu-exporter \
 	-n automotive-dev-operator-system
 
 echo "Admin setup completed successfully."

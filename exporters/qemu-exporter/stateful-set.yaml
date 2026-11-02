@@ -18,24 +18,8 @@ spec:
     annotations:
         openshift.io/required-scc: privileged
     spec:
-      #tolerations:
-      #- key: "metal"
-      #  operator: "Equal"
-      #  value: "true"
-      #  effect: "NoSchedule"
-      affinity:
-        nodeAffinity:
-          requiredDuringSchedulingIgnoredDuringExecution:
-            nodeSelectorTerms:
-            - matchExpressions:
-              - key: auto.node-role/metal
-                operator: In
-                values:
-                - "true"
       serviceAccountName: qemu-exporter
       restartPolicy: Always
-      # give the preStop hook below enough time to run `oc delete exporter`
-      # before kubelet moves on to SIGTERM/SIGKILL
       terminationGracePeriodSeconds: 60
       volumes:
         - name: registry-ca
@@ -49,6 +33,8 @@ spec:
           env:
             - name: JMP_NAMESPACE
               value: "auto-jumpstarter"
+            - name: JMP_EXPORTER_NAMESPACE
+              value: "auto-exporters"
           command:
             - /bin/bash
             - -c
@@ -56,12 +42,9 @@ spec:
               set -eo pipefail
               source /venv/bin/activate
 
-              # Extract the values from the service account
               TOKEN=$(cat /var/run/secrets/kubernetes.io/serviceaccount/token)
-              NAMESPACE=$(cat /var/run/secrets/kubernetes.io/serviceaccount/namespace)
               API_SERVER=$(oc whoami --show-server)
 
-              # set ./kube/config correctly
               mkdir -p ~/.kube
 
               oc config set-cluster rhas \
@@ -74,17 +57,9 @@ spec:
               oc config set-context qemu-exporter-ctx \
                 --cluster=rhas \
                 --user=qemu-exporter \
-                --namespace=$NAMESPACE
+                --namespace=$JMP_NAMESPACE
 
               oc config use-context qemu-exporter-ctx
-
-              # check if exporter already exists and delete it if so ...
-
-              EXPORTER_NAME=$(cat /etc/hostname)
-              if oc get exporter "$EXPORTER_NAME" -n $JMP_NAMESPACE &>/dev/null; then
-                echo "Exporter '$EXPORTER_NAME' already exists, deleting it now ..."
-                oc delete exporter "$EXPORTER_NAME" -n $JMP_NAMESPACE || true
-              fi
 
       containers:
         - name: jumpstarter-exporter
@@ -107,12 +82,8 @@ spec:
                   - -c
                   - |
                     source /venv/bin/activate
-
                     EXPORTER_NAME=$(cat /etc/hostname)
                     echo "Pod is terminating, deleting exporter '$EXPORTER_NAME' ..."
-
-                    # ~/.kube/config was already set up by the container's
-                    # main command on startup, so oc is already authenticated
                     timeout 20s oc delete exporter "$EXPORTER_NAME" -n "$JMP_NAMESPACE" --ignore-not-found || true
           volumeMounts:
             - mountPath: /etc/pki/ca-trust/source/anchors/service-ca-bundle.crt
@@ -124,6 +95,8 @@ spec:
               value: "1"
             - name: JMP_NAMESPACE
               value: "auto-jumpstarter"
+            - name: JMP_EXPORTER_NAMESPACE
+              value: "auto-exporters"
             - name: OCI_USERNAME
               value: "serviceaccount"
           command:
@@ -133,29 +106,15 @@ spec:
               set -eo pipefail
               source /venv/bin/activate
 
-              # debugging - update to latest jumpstarter version
-              #uv pip install --reinstall "git+https://github.com/mickume/jumpstarter@develop#subdirectory=python/packages/jumpstarter-all"
-
-              # reinstall rhas drivers so their entry points survive the jumpstarter-all reinstall above
-              #uv pip install --reinstall /opt/rhas-driver-qemu /opt/rhas-driver-opendal /opt/rhas-driver-power
-
-              # Trust the internal registry's service-serving CA
               if [ -f /etc/pki/ca-trust/source/anchors/service-ca-bundle.crt ]; then
                   update-ca-trust
               fi
 
-              # Extract the values from the service account
               TOKEN=$(cat /var/run/secrets/kubernetes.io/serviceaccount/token)
-              NAMESPACE=$(cat /var/run/secrets/kubernetes.io/serviceaccount/namespace)
               API_SERVER=$(oc whoami --show-server)
 
-              # upstream jumpstarter's OCI credential resolution only reads
-              # OCI_USERNAME/OCI_PASSWORD from the environment (no *_FILE
-              # fallback), so export the SA token here rather than pointing
-              # OCI_PASSWORD_FILE at it
               export OCI_PASSWORD="$TOKEN"
 
-              # set ./kube/config correctly
               mkdir -p ~/.kube
 
               oc config set-cluster rhadp \
@@ -168,25 +127,36 @@ spec:
               oc config set-context qemu-exporter-ctx \
                 --cluster=rhadp \
                 --user=qemu-exporter \
-                --namespace=$NAMESPACE
+                --namespace=$JMP_NAMESPACE
 
               oc config use-context qemu-exporter-ctx
 
-              # create the exporter config
+              if ! command -v qemu-system-aarch64 &> /dev/null; then
+                echo "qemu-system-aarch64 fehlt. Erstelle lokalen Symlink auf das RHEL-Binary qemu-kvm..."
+                mkdir -p /tmp/qemu-bin
+                ln -s /usr/libexec/qemu-kvm /tmp/qemu-bin/qemu-system-aarch64
+                export PATH="/tmp/qemu-bin:$PATH"
+              fi
+
               EXPORTER_NAME=$(cat /etc/hostname)
 
-              jmp admin create exporter "$EXPORTER_NAME" -n $JMP_NAMESPACE --label type=virtual --label device=qemu --save --insecure-tls --nointeractive --out ./dummy.yaml
-              TOKEN=$(yq '.token' dummy.yaml)
-              echo "$TOKEN" > token
+              if oc get exporter "$EXPORTER_NAME" -n $JMP_NAMESPACE &>/dev/null; then
+                echo "Exporter '$EXPORTER_NAME' existiert bereits in Kubernetes. Verwende ihn wieder..."
+                while ! oc get secret "${EXPORTER_NAME}-exporter" -n $JMP_NAMESPACE &>/dev/null; do
+                  sleep 1
+                done
+                oc get secret "${EXPORTER_NAME}-exporter" -n $JMP_NAMESPACE -o jsonpath='{.data.token}' | base64 -d > token
+              else
+                echo "Erstelle völlig neuen Exporter '$EXPORTER_NAME'..."
+                jmp admin create exporter "$EXPORTER_NAME" -n $JMP_NAMESPACE --label type=virtual --label device=qemu --save --insecure-tls --nointeractive --out ./dummy.yaml
+                yq '.token' dummy.yaml > token
+                rm -f ./dummy.yaml
+              fi
 
-              # remove the exporter config
-              rm ./dummy.yaml
-
-              # detect the endpoint
               while [ -z "$ENDPOINT" ]
               do
                 ENDPOINT=$(kubectl get -n $JMP_NAMESPACE \
-                  exporters.jumpstarter.dev $(cat /etc/hostname) -o jsonpath="{.status.endpoint}")
+                  exporters.jumpstarter.dev "$EXPORTER_NAME" -o jsonpath="{.status.endpoint}")
                 sleep 1s
               done
               echo "$ENDPOINT" > endpoint
@@ -196,7 +166,7 @@ spec:
               kind: ExporterConfig
               metadata:
                 namespace: $JMP_NAMESPACE
-                name: $(cat /etc/hostname)
+                name: $EXPORTER_NAME
               endpoint: $(cat endpoint)
               tls:
                 ca: ''
@@ -213,7 +183,7 @@ spec:
                   type: rhas_driver_qemu.driver.Qemu
                   config:
                     smp: 2
-                    mem: 12G
+                    mem: 2G
                     arch: aarch64
                     default_partitions:
                       OVMF_CODE.fd: /usr/share/AAVMF/AAVMF_CODE.fd
@@ -229,7 +199,3 @@ spec:
               echo "Starting the exporter ..."
 
               jmp run --exporter-config qemu-exporter.yaml
-
-              #while true; do
-              #  sleep 30s
-              #done
