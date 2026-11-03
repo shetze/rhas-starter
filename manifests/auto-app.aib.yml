@@ -11,7 +11,7 @@ content:
     - auto-app
   add_files:
     - path: /etc/containers/systemd/engine.container
-      source_path: files/engine.container
+      source_path: ../files/engine.container
 
 auth:
   # "password"
