@@ -9,6 +9,9 @@ content:
       priority: 5      
   rpms:
     - auto-app
+  make_dirs:
+    - path: /etc/containers/systemd/
+      parents: true
   add_files:
     - path: /etc/containers/systemd/engine.container
       text: |
