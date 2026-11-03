@@ -12,7 +12,34 @@ content:
       priority: 5      
   rpms:
     - auto-app
+    - auto-apps
     - vim
+    - curl
+    - dlt-daemon
+    - dlt-tools
+    - fsverity-utils
+    - gdb
+    - greenboot-default-health-checks
+    - iproute
+    - iputils
+    - less
+    - openssh-clients
+    - openssh-server
+    - pciutils
+    - podman
+    - python3-pip
+    - qm
+    - strace
+    - stress-ng
+    - tcpdump
+    - vsomeip3-debuginfo
+    - vsomeip3-routingmanager
+    - vsomeip3-routingmanager-debuginfo
+    - vsomeip3-selinux
+    - vsomeip3-tools
+    - xauth
+    - xterm
+
   make_dirs:
     - path: /etc/containers/systemd/
       parents: true
@@ -33,6 +60,9 @@ content:
         
         [Install]
         WantedBy=multi-user.target
+
+network:
+  dynamic: []
 
 auth:
   # "password"
