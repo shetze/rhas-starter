@@ -6,7 +6,7 @@ content:
   repos:
     - id: local
       baseurl: file:///workspace/src/bin
-      priority: 11
+      priority: 10
   rpms:
     - auto-app
 
