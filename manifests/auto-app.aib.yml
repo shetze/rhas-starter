@@ -12,10 +12,6 @@ content:
   add_files:
     - path: /etc/containers/systemd/engine.container
       source_path: files/engine.container
-  systemd:
-    enabled_services:
-      # Enable ssh daemon
-      # - sshd.service
 
 auth:
   # "password"
