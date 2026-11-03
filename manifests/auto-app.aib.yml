@@ -11,7 +11,9 @@ content:
     - auto-app
   add_files:
     - path: /etc/containers/systemd/engine.container
-      source_path: ../files/engine.container
+      text: |
+        Hallo Welt
+        Das ist ein Text
 
 auth:
   # "password"
