@@ -31,11 +31,6 @@ content:
     - strace
     - stress-ng
     - tcpdump
-    - vsomeip3-debuginfo
-    - vsomeip3-routingmanager
-    - vsomeip3-routingmanager-debuginfo
-    - vsomeip3-selinux
-    - vsomeip3-tools
     - xauth
     - xterm
 
