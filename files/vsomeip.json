@@ -1,0 +1,67 @@
+{
+  "routing": {
+    "host": {
+      "name": "routingmanagerd",
+      "unicast": "10.88.0.1",
+      "port": "31000"
+    },
+    "guests": {
+      "unicast": "10.88.0.1",
+      "ports": [
+        {
+          "first": "1026",
+          "last": "65535"
+        }
+      ]
+    }
+  },
+  "logging": {
+    "level": "info",
+    "console": "true",
+    "dlt": "false"
+  },
+  "applications": [
+    {
+      "name": "routingmanagerd",
+      "id": "0x0101"
+    },
+    {
+      "name": "Radio",
+      "id": "0x1000"
+    },
+    {
+      "name": "Engine",
+      "id": "0x1001"
+    },
+    {
+      "name": "Radio client",
+      "id": "0x1002"
+    }
+  ],
+  "services": [
+    {
+      "service": "0x1000",
+      "instance": "0x01",
+      "unreliable": "30509"
+    },
+    {
+      "service": "0x1001",
+      "instance": "0x01",
+      "unreliable": "30509"
+    }
+  ],
+  "service-discovery": {
+    "enable": "true",
+    "multicast": "224.224.224.245",
+    "port": "30490",
+    "protocol": "tcp",
+    "initial_delay_min": "10",
+    "initial_delay_max": "100",
+    "repetitions_base_delay": "200",
+    "repetitions_max": "3",
+    "ttl": "3",
+    "cyclic_offer_delay": "2000",
+    "request_response_delay": "1500"
+  }
+}
+

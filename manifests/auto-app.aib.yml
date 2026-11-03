@@ -4,11 +4,60 @@ name: auto-app
 
 content:
   repos:
+    - id: copr-sample-apps
+      baseurl: https://download.copr.fedorainfracloud.org/results/alexl/cs9-sample-images/centos-stream-9-$arch/
+      priority: 10
     - id: local
       baseurl: file:///workspace/src/bin
-      priority: 10
+      priority: 5      
   rpms:
+    - dnf # needed for bootc-image-builder to generate manifest
+    - e2fsprogs # mkfs.ext4 neeed for bc-i-b
+    - audit
+    - auto-apps
+    - auto-apps-debuginfo
+    - curl
+    - dlt-daemon
+    - dlt-tools
+    - fsverity-utils
+    - gdb
+    - greenboot-default-health-checks
+    - iproute
+    - iputils
+    - less
+    - openssh-clients
+    - openssh-server
+    - pciutils
+    - podman
+    - python3-pip
+    - qm
+    - strace
+    - stress-ng
+    - tcpdump
+    - vim
+    - vsomeip3-debuginfo
+    - vsomeip3-routingmanager
+    - vsomeip3-routingmanager-debuginfo
+    - vsomeip3-selinux
+    - vsomeip3-tools
+    - xauth
+    - xterm
     - auto-app
+  container_images:
+    - source: quay.io/shetze/auto-apps
+      tag: latest
+      name: localhost/auto-apps
+  add_files:
+    - path: /etc/containers/systemd/engine.container
+      source_path: files/engine.container
+    - path: /etc/vsomeip.json
+      source_path: files/vsomeip.json
+  systemd:
+    enabled_services:
+      # Enable ssh daemon
+      - sshd.service
+      - routingmanagerd.service
+      - dlt.service
 
 auth:
   # "password"
