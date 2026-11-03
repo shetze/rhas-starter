@@ -12,7 +12,6 @@ content:
       priority: 5      
   rpms:
     - auto-app
-    - auto-apps
     - vim
     - curl
     - dlt-daemon
