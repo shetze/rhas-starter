@@ -17,7 +17,6 @@ content:
     - curl
     - dlt-daemon
     - dlt-tools
-    - fsverity-utils
     - gdb
     - greenboot-default-health-checks
     - iproute
