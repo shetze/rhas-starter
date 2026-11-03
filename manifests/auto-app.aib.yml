@@ -4,8 +4,8 @@ name: auto-app
 
 content:
   repos:
-    - id: autosd
-      baseurl: https://autosd.sig.centos.org/AutoSD-10/nightly/repos/AutoSD/compose/AutoSD/$arch/os
+    - id: alex
+      baseurl: https://download.copr.fedorainfracloud.org/results/alexl/cs9-sample-images/centos-stream-9-$arch/
       priority: 10
     - id: local
       baseurl: file:///workspace/src/bin
