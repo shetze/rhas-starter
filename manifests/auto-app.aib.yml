@@ -4,11 +4,15 @@ name: auto-app
 
 content:
   repos:
+    - id: autosd
+      baseurl: https://autosd.sig.centos.org/AutoSD-10/nightly/repos/AutoSD/compose/AutoSD/$arch/os
+      priority: 10
     - id: local
       baseurl: file:///workspace/src/bin
       priority: 5      
   rpms:
     - auto-app
+    - vim
   make_dirs:
     - path: /etc/containers/systemd/
       parents: true
