@@ -54,6 +54,10 @@ content:
         
         [Install]
         WantedBy=multi-user.target
+  systemd:
+    enabled_services:
+      # Enable ssh daemon
+      - sshd.service
 
 
 qm:
