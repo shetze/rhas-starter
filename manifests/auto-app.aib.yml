@@ -62,7 +62,6 @@ qm:
       - python3-pip
       - vim
       - iproute
-      - containernetworking-plugins
       - curl
       - strace
       - iputils
