@@ -66,6 +66,10 @@ qm:
       - strace
       - iputils
       - tcpdump
+    container_images:
+      - source: quay.io/centos/centos
+        tag: stream10
+        name: localhost/cs10      
 
 network:
   dynamic: {}
