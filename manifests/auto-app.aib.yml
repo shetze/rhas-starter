@@ -36,6 +36,7 @@ content:
   make_dirs:
     - path: /etc/containers/systemd/
       parents: true
+      exist_ok: true
   add_files:
     - path: /etc/containers/systemd/engine.container
       text: |
