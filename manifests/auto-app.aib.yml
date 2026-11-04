@@ -55,6 +55,19 @@ content:
         [Install]
         WantedBy=multi-user.target
 
+
+qm:
+  content:
+    rpms:
+      - python3-pip
+      - vim
+      - iproute
+      - containernetworking-plugins
+      - curl
+      - strace
+      - iputils
+      - tcpdump
+
 network:
   dynamic: {}
 
