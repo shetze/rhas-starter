@@ -15,7 +15,6 @@ content:
       priority: 5      
   rpms:
     - auto-app
-    - auto-apps
     - vim
     - curl
     - gdb
@@ -34,11 +33,12 @@ content:
     - tcpdump
     - xauth
     - xterm
-    - dlt-daemon
-    - dlt-tools
-    - vsomeip3-routingmanager
-    - vsomeip3-selinux
-    - vsomeip3-tools
+    #- auto-apps
+    #- dlt-daemon
+    #- dlt-tools
+    #- vsomeip3-routingmanager
+    #- vsomeip3-selinux
+    #- vsomeip3-tools
   container_images:
     - source: quay.io/shetze/auto-apps
       tag: latest
@@ -158,11 +158,11 @@ qm:
       - strace
       - iputils
       - tcpdump
-      - auto-apps
-    #container_images:
-    #  - source: quay.io/shetze/auto-apps
-    #    tag: latest
-    #    name: localhost/auto-apps
+      # - auto-apps
+    container_images:
+      - source: quay.io/shetze/auto-apps
+        tag: latest
+        name: localhost/auto-apps
     add_files:
       - path: /etc/containers/systemd/radio.container
         text: |
