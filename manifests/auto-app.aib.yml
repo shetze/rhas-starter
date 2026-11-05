@@ -137,8 +137,8 @@ content:
     enabled_services:
       # Enable ssh daemon
       - sshd.service
-      - routingmanagerd.service
-      - dlt.service
+      #- routingmanagerd.service
+      #- dlt.service
 
 
 qm:
