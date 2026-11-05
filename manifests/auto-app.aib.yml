@@ -39,7 +39,31 @@ content:
     - vsomeip3-routingmanager
     - vsomeip3-selinux
     - vsomeip3-tools
+  container_images:
+    - source: quay.io/shetze/auto-apps
+      tag: latest
+      name: localhost/auto-apps
+  make_dirs:
+    - path: /etc/containers/systemd/
+      parents: true
+      exist_ok: true
   add_files:
+    - path: /etc/containers/systemd/engine.container
+      text: |
+        [Unit]
+        Description=Demo engine service container
+        Requires=routingmanagerd.socket
+        
+        [Container]
+        Image=localhost/auto-apps
+        Volume=/run/vsomeip:/run/vsomeip
+        Exec=/usr/bin/engine-service
+        
+        [Service]
+        Restart=always
+        
+        [Install]
+        WantedBy=multi-user.target
     - path: /etc/vsomeip.json
       text: |
         {
@@ -135,7 +159,47 @@ qm:
       - iputils
       - tcpdump
       - auto-apps
+    container_images:
+      - source: quay.io/centos/arm64v8
+        tag: stream10
+        name: localhost/cs10      
+      - source: quay.io/shetze/auto-apps
+        tag: latest
+        name: localhost/auto-apps
     add_files:
+      - path: /etc/containers/systemd/radio.container
+        text: |
+          [Unit]
+          Description=Demo radio service container
+          Wants=engine.service
+
+          [Container]
+          Image=localhost/auto-apps
+          Volume=/run/vsomeip:/run/vsomeip
+          Exec=/usr/bin/radio-service
+          
+          [Service]
+          Restart=always
+          
+          [Install]
+          WantedBy=multi-user.target
+
+      - path: /etc/containers/systemd/engine.container
+        text: |
+          [Unit]
+          Description=Demo engine service container
+          
+          [Container]
+          Image=localhost/auto-apps
+          Volume=/run/vsomeip:/run/vsomeip
+          Exec=/usr/bin/engine-service
+          
+          [Service]
+          Restart=always
+          
+          [Install]
+          WantedBy=multi-user.target
+
       - path: /etc/vsomeip.json
         text: |
           {
