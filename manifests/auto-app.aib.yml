@@ -163,9 +163,9 @@ qm:
       - source: quay.io/centos/centos
         tag: stream10
         name: localhost/cs10      
-      - source: quay.io/shetze/auto-apps
-        tag: latest
-        name: localhost/auto-apps
+      #- source: quay.io/shetze/auto-apps
+      #  tag: latest
+      #  name: localhost/auto-apps
     add_files:
       - path: /etc/containers/systemd/radio.container
         text: |
