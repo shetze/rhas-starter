@@ -44,23 +44,134 @@ content:
       tag: latest
       name: localhost/auto-apps
   make_dirs:
-    - path: /etc/containers/systemd/
+    - path: /etc/containers/systemd/qm.container.d
+      parents: true
+      exist_ok: true
+    - path: /etc/qm/containers/systemd/
       parents: true
       exist_ok: true
   add_files:
+    - path: /usr/lib/tmpfiles.d/vsomeip3.conf
+      text: |
+    - path: /usr/lib/tmpfiles.d/vsomeip3.conf
+      text: |
+        D /run/ipc/vsomeip 01777 root root -
+        L /run/vsomeip - - - - /run/ipc/vsomeip
+    - path: /usr/lib/tmpfiles.d/dlt.conf
+      text: |
+        D /run/ipc/dlt 01777 root root -
+        L /run/dlt - - - - /run/ipc/dlt
+    - path: /usr/lib/systemd/system/dlt.service
+      text: |
+        [Unit]
+        Description=COVESA DLT logging daemon
+        Documentation=man:dlt-daemon(1) man:dlt.conf(5)
+        DefaultDependencies=no
+        Before=shutdown.target
+        Conflicts=shutdown.target
+        After=tmp.mount
+        Requires=dlt.socket
+        
+        [Service]
+        Type=simple
+        User=dlt-daemon
+        ExecStart=/usr/bin/dlt-daemon
+        # WatchdogSec=2
+        NotifyAccess=main
+        LimitCORE=infinity
+        
+        [Install]
+        WantedBy=multi-user.target
+    - path: /usr/lib/systemd/system/dlt.socket
+      text: |
+        [Unit]
+        Description=vsomeip routing manager activation socket
+        After=systemd-tmpfiles-setup.service
+        
+        [Socket]
+        ListenStream=%t/dlt/dlt.socket
+        SocketUser=root
+        SocketGroup=root
+        SELinuxContextFromNet=yes
+        
+        [Install]
+        WantedBy=sockets.target
+    - path: /usr/lib/systemd/system/vsomeip.socket
+      text: |
+        [Unit]
+        Description=vsomeip3 Socket for asil-to-qm
+        After=systemd-tmpfiles-setup.service
+        
+        [Socket]
+        ListenStream=%t/ipc/vsomeip/vsomeip.0
+        SELinuxContextFromNet=yes
+        
+        [Install]
+        WantedBy=sockets.target
+    - path: /usr/lib/systemd/system/routingmanagerd.socket
+      text: |
+        [Unit]
+        Description=vsomeip routing manager activation socket
+        After=systemd-tmpfiles-setup.service
+        
+        [Socket]
+        ListenStream=%t/vsomeip/vsomeip-0
+        SocketUser=routingmanagerd
+        SocketGroup=routingmanagerd
+        SELinuxContextFromNet=yes
+        
+        [Install]
+        WantedBy=sockets.target
+    - path: /etc/containers/systemd/qm.container.d/vsomeip-qm.conf
+      text: |
+        [Container]
+        Volume=/run/ipc/:/run/ipc/
+        Volume=/run/vsomeip/:/run/vsomeip/
+        Volume=/run/dlt/:/run/dlt/
+    - path: /etc/containers/systemd/dlt.container
+      text: |
+        [Unit]
+        Description=COVESA DLT logging daemo (asil-to-qm)
+        Before=shutdown.target
+        Conflicts=shutdown.target
+        After=tmp.mount
+        Requires=dlt.socket
+        
+        [Container]
+        Image=quay.io/shetze/atdev:auto-apps
+        Network=none
+        Volume=/run/vsomeip/:/run/vsomeip/
+        Volume=/run/dlt/:/run/dlt/
+        SecurityLabelType=ipc_t
+        Exec=/usr/bin/dlt-daemon
+        
+        [Service]
+        Restart=always
+        Type=notify
+        NotifyAccess=main
+        LimitCORE=infinity
+        
+        [Install]
+        WantedBy=multi-user.target
     - path: /etc/containers/systemd/engine.container
       text: |
         [Unit]
-        Description=Demo engine service container
-        Requires=routingmanagerd.socket
+        Description=engine service container (asil-to-qm)
+        Requires=routingmanagerd.service
+        After=routingmanagerd.service
         
         [Container]
         Image=localhost/auto-apps
-        Volume=/run/vsomeip:/run/vsomeip
+        Network=none
+        Environment=SOCKET_PATH=/run/vsomeip/vsomeip.socket
+        Volume=/var/run/vsomeip/:/var/run/vsomeip/
+        Volume=/var/run/dlt/:/var/run/dlt/
+        SecurityLabelType=ipc_t
         Exec=/usr/bin/engine-service
         
         [Service]
         Restart=always
+        Type=notify
         
         [Install]
         WantedBy=multi-user.target
@@ -167,15 +278,60 @@ qm:
         tag: latest
         name: localhost/auto-apps
     add_files:
+      - path: /etc/containers/systemd/dlt.container
+        text: |
+          [Unit]
+          Description=dlt service container (asil-to-qm)
+          
+          [Container]
+          Image=localhost/auto-apps
+          Network=none
+          Volume=/run/vsomeip/:/run/vsomeip/
+          Volume=/run/dlt/:/run/dlt/
+          Volume=/run/ipc/:/run/ipc/
+          SecurityLabelType=qm_container_ipc_t
+          Exec=/usr/bin/dlt-daemon
+          
+          [Service]
+          Restart=always
+          Type=notify
+          
+          [Install]
+          WantedBy=multi-user.target
+      - path: /etc/containers/systemd/routingmanagerd.container
+        text: |
+          [Unit]
+          Description=vsomeip routingmanager container (asil-to-qm)
+          After=dlt.service
+          
+          [Container]
+          Image=localhost/auto-apps
+          Network=none
+          Volume=/run/vsomeip/:/run/vsomeip/
+          Volume=/run/dlt/:/run/dlt/
+          Volume=/run/ipc/:/run/ipc/
+          SecurityLabelType=qm_container_ipc_t
+          Exec=/usr/bin/routingmanagerd
+          
+          [Service]
+          Restart=always
+          Type=notify
+          
+          [Install]
+          WantedBy=multi-user.target
       - path: /etc/containers/systemd/radio.container
         text: |
           [Unit]
-          Description=Demo radio service container
-          Wants=engine.service
-
+          Description=radio service container (asil-to-qm)
+          
           [Container]
           Image=localhost/auto-apps
-          Volume=/run/vsomeip:/run/vsomeip
+          Volume=/run/vsomeip/:/run/vsomeip/
+          Volume=/run/dlt/:/run/dlt/
+          Volume=/run/ipc/:/run/ipc/
+          SecurityLabelType=qm_container_ipc_t
+          # SecurityLabelLevel=s0
+          Network=host
           Exec=/usr/bin/radio-service
           
           [Service]
@@ -183,7 +339,6 @@ qm:
           
           [Install]
           WantedBy=multi-user.target
-
       - path: /etc/containers/systemd/engine.container
         text: |
           [Unit]
