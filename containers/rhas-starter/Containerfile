@@ -1,5 +1,4 @@
-# FROM ghcr.io/rhadp/codespaces:latest
-FROM quay.io/shetze/codespaces:latest
+FROM ghcr.io/rhadp/codespaces:latest
 
 USER root
 
