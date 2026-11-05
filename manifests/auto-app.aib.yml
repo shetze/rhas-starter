@@ -145,6 +145,13 @@ content:
 
 qm:
   content:
+    repos:
+      - id: epel
+        baseurl: https://ftp-stud.hs-esslingen.de/pub/epel/10.4/Everything/aarch64/
+        priority: 20
+      - id: bigmachine
+        baseurl: http://rpmrepo-rpmrepo.apps.ocp.boernig.name/AutoSD-AT/repos/10-stream/
+        priority: 10
     rpms:
       - python3-pip
       - vim
