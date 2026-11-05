@@ -160,7 +160,7 @@ qm:
       - strace
       - iputils
       - tcpdump
-      - auto-apps
+      # - auto-apps
     container_images:
       - source: quay.io/centos/centos
         tag: stream10
