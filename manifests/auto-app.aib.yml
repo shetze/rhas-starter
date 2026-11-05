@@ -36,9 +36,7 @@ content:
     - xterm
     - dlt-daemon
     - dlt-tools
-    - vsomeip3-debuginfo
     - vsomeip3-routingmanager
-    - vsomeip3-routingmanager-debuginfo
     - vsomeip3-selinux
     - vsomeip3-tools
   container_images:
@@ -160,7 +158,7 @@ qm:
       - strace
       - iputils
       - tcpdump
-      # - auto-apps
+      - auto-apps
     container_images:
       - source: quay.io/centos/centos
         tag: stream10
