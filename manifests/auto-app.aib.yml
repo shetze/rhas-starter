@@ -159,10 +159,10 @@ qm:
       - iputils
       - tcpdump
       - auto-apps
-    container_images:
-      - source: quay.io/shetze/auto-apps
-        tag: latest
-        name: localhost/auto-apps
+    #container_images:
+    #  - source: quay.io/shetze/auto-apps
+    #    tag: latest
+    #    name: localhost/auto-apps
     add_files:
       - path: /etc/containers/systemd/radio.container
         text: |
