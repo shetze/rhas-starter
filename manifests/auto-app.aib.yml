@@ -39,6 +39,7 @@ content:
     - vsomeip3-routingmanager
     - vsomeip3-selinux
     - vsomeip3-tools
+    - audit
   container_images:
     - source: quay.io/shetze/auto-apps
       tag: latest
@@ -51,6 +52,9 @@ content:
       parents: true
       exist_ok: true
   add_files:
+    - path: /usr/lib/tmpfiles.d/relabel.conf
+      text: |
+        Z /run/ipc - - - -
     - path: /usr/lib/tmpfiles.d/vsomeip3.conf
       text: |
         D /run/ipc/vsomeip 01777 root root -
