@@ -98,18 +98,6 @@ content:
         
         [Install]
         WantedBy=sockets.target
-    - path: /usr/lib/systemd/system/vsomeip.socket
-      text: |
-        [Unit]
-        Description=vsomeip3 Socket for asil-to-qm
-        After=systemd-tmpfiles-setup.service
-        
-        [Socket]
-        ListenStream=%t/ipc/vsomeip/vsomeip.0
-        SELinuxContextFromNet=yes
-        
-        [Install]
-        WantedBy=sockets.target
     - path: /usr/lib/systemd/system/routingmanagerd.socket
       text: |
         [Unit]
