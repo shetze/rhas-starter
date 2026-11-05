@@ -15,8 +15,6 @@ content:
     - auto-apps
     - vim
     - curl
-    - dlt-daemon
-    - dlt-tools
     - gdb
     - greenboot-default-health-checks
     - iproute
