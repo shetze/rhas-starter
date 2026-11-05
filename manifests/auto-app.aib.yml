@@ -52,6 +52,10 @@ content:
       parents: true
       exist_ok: true
   add_files:
+    - path: /etc/selinux/config
+      text: |
+        SELINUX=permissive
+        SELINUXTYPE=automotive
     - path: /usr/lib/tmpfiles.d/relabel.conf
       text: |
         Z /run/ipc - - - -
