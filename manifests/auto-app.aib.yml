@@ -53,8 +53,6 @@ content:
   add_files:
     - path: /usr/lib/tmpfiles.d/vsomeip3.conf
       text: |
-    - path: /usr/lib/tmpfiles.d/vsomeip3.conf
-      text: |
         D /run/ipc/vsomeip 01777 root root -
         L /run/vsomeip - - - - /run/ipc/vsomeip
     - path: /usr/lib/tmpfiles.d/dlt.conf
